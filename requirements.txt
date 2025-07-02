@@ -1,0 +1,5 @@
+tkinterdnd2==0.3.0
+requests==2.32.3
+matplotlib==3.9.0
+Pillow==10.3.0
+reportlab==4.2.0
