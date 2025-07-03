@@ -1,289 +1,105 @@
-"""
-tk.messagebox
--------------
+# AstroMedAI: Space Health & Radiation Risk Assessment
 
-This module provides a simple and convenient interface to the native
-message box dialogues available in Tk 4.2 and newer. These dialogues are
-useful for displaying information, warnings, errors, and asking various
-types of questions to the user.
+![AstroMedAI GUI Screenshot](image_de16bc.png)
+*(Example Screenshot of the AstroMedAI Graphical User Interface)*
 
-Developed by Fredrik Lundh, May 1997.
-Refactored and improved for clarity and modern Python practices.
+## Table of Contents
+1.  [Introduction](#introduction)
+2.  [Features](#features)
+3.  [How It Works](#how-it-works)
+    * [Core Modules](#core-modules)
+4.  [Getting Started](#getting-started)
+    * [Prerequisites](#prerequisites)
+    * [Installation](#installation)
+    * [Running the Application](#running-the-application)
+5.  [Usage Guide](#usage-guide)
+    * [Mission Parameters](#mission-parameters)
+    * [Space Weather Data](#space-weather-data)
+    * [Radiation Risk Assessment](#radiation-risk-assessment)
+    * [Space Weather Visualizations](#space-weather-visualizations)
+    * [PDF Report Generation](#pdf-report-generation)
+    * [Local Data Input (Drag-and-Drop)](#local-data-input-drag-and-drop)
+    * [AstroMed Quiz](#astromed-quiz)
+6.  [Project Structure](#project-structure)
+7.  [Built With](#built-with)
+8.  [Future Enhancements](#future-enhancements)
+9.  [License](#license)
+10. [Contact](#contact)
 
-Usage:
-------
-Import the functions directly:
-    from tkinter.messagebox import showinfo, showwarning, showerror, \
-        askquestion, askokcancel, askyesno, askyesnocancel, askretrycancel
+## 1. Introduction
 
-Then call them with a title and message:
-    showinfo("Information", "This is an informational message.")
-    result = askyesno("Confirmation", "Do you want to proceed?")
+AstroMedAI is a desktop application developed in Python designed for the preliminary assessment of space radiation risk for crewed missions. It integrates real-time space weather data with user-defined mission parameters to calculate a simplified radiation risk score, visualize space weather events, generate comprehensive reports, and provide an educational quiz mode.
 
-Options:
---------
-All functions accept the following keyword arguments (all are optional and have
-sensible default values):
+The primary goal of AstroMedAI is to empower mission planners, space health professionals, and space enthusiasts with a tool to quickly understand and estimate potential radiation exposure risks, thereby fostering informed decision-making and raising awareness about space environmental hazards.
 
-- `default`: Specifies which button should be the default (e.g., 'ok', 'yes').
-             Must be one of the reply codes (e.g., `messagebox.OK`, `messagebox.YES`).
-- `icon`:    Determines the icon to display (e.g., 'info', 'warning', 'error', 'question').
-             Typically set by the convenience functions, but can be overridden.
-- `message`: The primary message text to display in the dialogue.
-- `parent`:  Specifies the parent window for the dialogue, causing it to appear
-             on top of the parent and blocking interaction with it.
-- `title`:   The title text for the dialogue window's title bar.
-- `type`:    Defines the set of buttons to display (e.g., 'ok', 'okcancel', 'yesno').
-             Typically set by the convenience functions.
+## 2. Features
 
-Reply Codes:
-------------
-The `ask*` functions return string constants representing the user's choice:
+* **Intuitive GUI:** User-friendly interface for inputting mission parameters and viewing results, built with `tkinter`.
+* **NASA DONKI API Integration:** Fetches up-to-date data on Solar Flares (FLR), Coronal Mass Ejections (CMEs), and Geomagnetic Storms (GST) from NASA's Space Weather Database Of Notifications, Knowledge, and Information.
+* **Radiation Risk Model:** Calculates a simplified mission-specific radiation risk percentage (0-100%) based on duration, orbit type, shielding level, and observed space weather events.
+* **Risk Categorization:** Clearly categorizes the calculated risk into "Low," "Moderate," "High," or "Extreme" with color-coded indicators for quick assessment.
+* **Space Weather Visualization:** Generates `matplotlib` plots for solar flare intensity and geomagnetic storm Kp-indices over your chosen mission timeframe, helping visualize event severity.
+* **PDF Report Generation:** Creates professional PDF summaries of the mission assessment, including all input parameters, risk results, and embedded space weather plots, using `ReportLab`.
+* **Local Data Input (Drag-and-Drop):** Supports dragging and dropping local `.json` files (formatted similarly to DONKI API responses) onto the application for custom data analysis.
+* **AstroMed Quiz:** An interactive educational quiz mode on space health and radiation to test and expand user knowledge.
+* **Standalone Application:** Can be packaged into a standalone executable using PyInstaller.
 
-- `ABORT`
-- `RETRY`
-- ``
-- `OK`
-- `CANCEL`
-- `YES`
-- `NO`
-"""
+## 3. How It Works
 
-from tkinter.commondialog import Dialog
+AstroMedAI functions by orchestrating several interconnected Python modules, each handling a specific part of the risk assessment and presentation process.
 
-# Public API functions exposed by this module
-__all__ = [
-    "showinfo", "showwarning", "showerror",
-    "askquestion", "askokcancel", "askyesno",
-    "askyesnocancel", "askretrycancel"
-]
+### Core Modules
 
-# --- Constants for Icons, Types, and Replies ---
+* **`src/astro_med_ai_gui.py`**: The main application script. It initializes the Tkinter GUI, manages user input, orchestrates calls to other modules (API fetch, risk calculation, visualization, reporting, quiz), and displays all results. This is the primary entry point for the application.
+* **`src/api_handler.py`**: Responsible for communication with NASA's DONKI API. It sends requests to retrieve space weather data for the specified date range and processes the API responses.
+* **`src/risk_model.py`**: Contains the core algorithm for calculating the simplified space radiation risk. It takes into account mission parameters (duration, orbit, shielding) and integrates the fetched solar flare data to produce a risk percentage and category.
+* **`src/visualization.py`**: Uses the `matplotlib` library to generate graphical representations of the fetched space weather data (e.g., solar flare intensity plots, geomagnetic storm Kp-index plots). These plots aid in visual analysis.
+* **`src/report_generator.py`**: Leverages the `ReportLab` library to dynamically create PDF documents. It compiles mission details, the calculated risk assessment, and embeds the generated space weather plots into a professional, printable report.
+* **`src/quiz_mode.py`**: Implements the interactive multiple-choice quiz. It manages questions, user answers, provides feedback, and keeps track of scores, offering an educational component to the application.
 
-# Icons
-# These strings correspond to the icons Tkinter can display in message boxes.
-ERROR = "error"
-INFO = "info"
-QUESTION = "question"
-WARNING = "warning"
+## 4. Getting Started
 
-# Types (Button Configurations)
-# These strings define the button sets available for message boxes.
-ABORTRETRYIGNORE = "abortretryignore"
-OK = "ok"
-OKCANCEL = "okcancel"
-RETRYCANCEL = "retrycancel"
-YESNO = "yesno"
-YESNOCANCEL = "yesnocancel"
+Follow these steps to set up and run AstroMedAI on your local machine.
 
-# Replies (Return Values)
-# These strings represent the possible responses from the message box.
-# Note: 'OK' is redefined here to be distinct from the 'OK' type above.
-# This is a common pattern in Tkinter's messagebox module.
-ABORT = "abort"
-RETRY = "retry"
-IGNORE = "ignore"
-OK = "ok"  # User clicked OK
-CANCEL = "cancel"
-YES = "yes"
-NO = "no"
+### Prerequisites
 
-# --- Message Box Class ---
+* **Python 3.8+**: The application is developed in Python.
+* **Git** (optional, but recommended for cloning the repository).
 
-class _MessageBox(Dialog):
-    """
-    Internal class representing a Tkinter message box.
-    Inherits from tkinter.commondialog.Dialog and uses the 'tk_messageBox' command.
-    Users should typically use the convenience functions rather than instantiating this directly.
-    """
-    command = "tk_messageBox"
+### Installation
 
-# --- Convenience Functions ---
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/your-username/AstroMedAI.git](https://github.com/your-username/AstroMedAI.git)
+    cd AstroMedAI
+    ```
+    *(Replace `https://github.com/your-username/AstroMedAI.git` with the actual URL of your repository.)*
 
-def _show(title: str | None = None, message: str | None = None,
-          _icon: str | None = None, _type: str | None = None,
-          **options) -> str | bool | None:
-    """
-    Internal helper function to display a message box.
+2.  **Create a virtual environment:**
+    It's highly recommended to use a virtual environment to isolate project dependencies.
+    ```bash
+    python -m venv venv
+    ```
 
-    It handles the mapping of `title`, `message`, `_icon`, and `_type`
-    to the `options` dictionary before calling the underlying Tkinter message box.
-    It also normalizes the return value from Tkinter to a string constant.
+3.  **Activate the virtual environment:**
+    * **On Windows:**
+        ```bash
+        .\venv\Scripts\activate
+        ```
+    * **On macOS/Linux:**
+        ```bash
+        source venv/bin/activate
+        ```
 
-    Args:
-        title (str, optional): The title of the message box window. Defaults to None.
-        message (str, optional): The message text to display. Defaults to None.
-        _icon (str, optional): The icon type (e.g., "info", "warning"). Defaults to None.
-        _type (str, optional): The button configuration (e.g., "ok", "yesno"). Defaults to None.
-        **options: Additional keyword arguments passed directly to the Tkinter message box.
+4.  **Install dependencies:**
+    With your virtual environment activated, install all required Python libraries:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-    Returns:
-        str | bool | None: The user's response as a string constant (e.g., "yes", "no", "ok"),
-                           a boolean for some types (True for YES/OK, False for NO/CANCEL),
-                           or None for CANCEL in `askyesnocancel`.
-    """
-    if _icon and "icon" not in options:
-        options["icon"] = _icon
-    if _type and "type" not in options:
-        options["type"] = _type
-    if title:
-        options["title"] = title
-    if message:
-        options["message"] = message
+### Running the Application
 
-    res = _MessageBox(**options).show()
+To start the AstroMedAI GUI:
 
-    # Normalize the return value from Tkinter.
-    # Tkinter can return booleans, Tcl_Obj, or strings depending on the Tcl/Tk version.
-    if isinstance(res, bool):
-        # For yes/no types, Tcl sometimes returns a boolean.
-        return YES if res else NO
-    elif res is None:
-        # If Tkinter returns None for a cancel, we preserve it for askyesnocancel.
-        return None
-    else:
-        # Otherwise, convert to string and return the constant.
-        return str(res)
-
-
-def showinfo(title: str | None = None, message: str | None = None, **options) -> str:
-    """
-    Displays an informational message box.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The message content.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        str: Always returns `OK`.
-    """
-    return _show(title, message, INFO, OK, **options)
-
-
-def showwarning(title: str | None = None, message: str | None = None, **options) -> str:
-    """
-    Displays a warning message box.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The message content.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        str: Always returns `OK`.
-    """
-    return _show(title, message, WARNING, OK, **options)
-
-
-def showerror(title: str | None = None, message: str | None = None, **options) -> str:
-    """
-    Displays an error message box.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The message content.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        str: Always returns `OK`.
-    """
-    return _show(title, message, ERROR, OK, **options)
-
-
-def askquestion(title: str | None = None, message: str | None = None, **options) -> str:
-    """
-    Asks a question, presenting 'Yes' and 'No' buttons.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The question to ask.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        str: Returns `YES` or `NO`.
-    """
-    return _show(title, message, QUESTION, YESNO, **options)
-
-
-def askokcancel(title: str | None = None, message: str | None = None, **options) -> bool:
-    """
-    Asks for confirmation, presenting 'OK' and 'Cancel' buttons.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The message asking for confirmation.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        bool: Returns `True` if 'OK' is clicked, `False` if 'Cancel' is clicked.
-    """
-    s = _show(title, message, QUESTION, OKCANCEL, **options)
-    return s == OK
-
-
-def askyesno(title: str | None = None, message: str | None = None, **options) -> bool:
-    """
-    Asks a yes/no question.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The question to ask.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        bool: Returns `True` if 'Yes' is clicked, `False` if 'No' is clicked.
-    """
-    s = _show(title, message, QUESTION, YESNO, **options)
-    return s == YES
-
-
-def askyesnocancel(title: str | None = None, message: str | None = None, **options) -> bool | None:
-    """
-    Asks a yes/no/cancel question.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The question to ask.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        bool | None: Returns `True` for 'Yes', `False` for 'No', and `None` for 'Cancel'.
-    """
-    s = _show(title, message, QUESTION, YESNOCANCEL, **options)
-    # The _show function already normalizes to string constants or None.
-    if s == CANCEL:
-        return None
-    return s == YES
-
-
-def askretrycancel(title: str | None = None, message: str | None = None, **options) -> bool:
-    """
-    Asks if an operation should be retried, presenting 'Retry' and 'Cancel' buttons.
-
-    Args:
-        title (str, optional): The title of the message box.
-        message (str, optional): The message asking to retry.
-        **options: Additional options for the message box (e.g., parent).
-
-    Returns:
-        bool: Returns `True` if 'Retry' is clicked, `False` if 'Cancel' is clicked.
-    """
-    s = _show(title, message, WARNING, RETRYCANCEL, **options)
-    return s == RETRY
-
----
-# Test Stuff
-# This block demonstrates the usage of the message box functions.
-
-if __name__ == "__main__":
-    print("--- Tkinter Message Box Test ---")
-    print("info:", showinfo("Spam", "Egg Information"))
-    print("warning:", showwarning("Spam", "Egg Warning"))
-    print("error:", showerror("Spam", "Egg Alert"))
-    print("question:", askquestion("Spam", "Question?"))
-    print("proceed (OK/Cancel):", askokcancel("Spam", "Proceed?"))
-    print("got it (Yes/No):", askyesno("Spam", "Got it?"))
-    print("want it (Yes/No/Cancel):", askyesnocancel("Spam", "Want it?"))
-    print("try again (Retry/Cancel):", askretrycancel("Spam", "Try again?"))
-    print("--- Test Complete ---")
+```bash
+python -m src.astro_med_ai_gui
